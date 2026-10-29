@@ -63,7 +63,7 @@ Construida con **NestJS** y **MongoDB**, desplegada como función serverless en 
 
 ---
 
-## 🗂 Modelo de datos
+## Modelo de datos
 
 ```
 Player ─────┐
