@@ -5,114 +5,253 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+#  ATP Tennis API
 
-## Description
+API REST ligera para consultar información del circuito ATP: perfiles de jugadores, ranking actual e histórico, torneos y resultados de partidos.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Construida con **NestJS** y **MongoDB**, desplegada como función serverless en **Vercel** con base de datos en **MongoDB Atlas**.
 
-## Project setup
+> Proyecto de portafolio enfocado en arquitectura modular con NestJS, modelado de documentos en MongoDB, validación con DTOs, paginación/filtros y documentación interactiva con Swagger.
 
-```bash
-$ npm install
+<!-- Reemplaza con tus URLs reales -->
+**Demo:** 
+**Documentación (Swagger):** 
+
+---
+
+## Tabla de contenidos
+
+- [Tecnologías](#-tecnologías)
+- [Características](#-características)
+- [Modelo de datos](#-modelo-de-datos)
+- [Endpoints](#-endpoints)
+- [Instalación local](#-instalación-local)
+- [Variables de entorno](#-variables-de-entorno)
+- [Seed de datos](#-seed-de-datos)
+- [Despliegue](#-despliegue)
+- [Estructura del proyecto](#-estructura-del-proyecto)
+- [Créditos de datos](#-créditos-de-datos)
+- [Autor](#-autor)
+
+---
+
+## Tecnologías
+
+| Capa | Tecnología |
+|---|---|
+| Framework | [NestJS](https://nestjs.com/) + TypeScript |
+| Base de datos | [MongoDB](https://www.mongodb.com/) con [Mongoose](https://mongoosejs.com/) |
+| Validación | `class-validator` + `class-transformer` |
+| Documentación | `@nestjs/swagger` (OpenAPI) |
+| Seguridad | `@nestjs/throttler` (rate limiting), CORS |
+| Configuración | `@nestjs/config` |
+| Hosting | [Vercel](https://vercel.com/) (Functions) |
+| BD en producción | [MongoDB Atlas](https://www.mongodb.com/atlas) (M0) |
+
+---
+
+## Características
+
+- Consulta de jugadores con filtros por país, mano dominante y nombre.
+- Ranking ATP actual e histórico por fecha.
+- Catálogo de torneos por categoría (Grand Slam, Masters 1000, ATP 500, ATP 250) y superficie.
+- Resultados de partidos por torneo, jugador o enfrentamiento directo (head-to-head).
+- Paginación y ordenamiento en todos los listados.
+- Validación de parámetros con DTOs y respuestas de error consistentes.
+- Documentación interactiva con Swagger en `/docs`.
+- Rate limiting para proteger la API pública.
+
+---
+
+## 🗂 Modelo de datos
+
+```
+Player ─────┐
+  _id       │
+  firstName │
+  lastName  │
+  country   │        Ranking
+  birthDate ├──────▶ playerId
+  hand      │        position
+  height    │        points
+            │        date
+            │
+            │        Match                  Tournament
+            ├──────▶ winnerId              ◀── tournamentId
+            └──────▶ loserId                   name
+                     score                     category
+                     round                     surface
+                     date                      city / country
+                                               startDate / endDate
 ```
 
-## Compile and run the project
+---
+
+## Endpoints
+
+Base URL: `/api/v1`
+
+### Jugadores
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/players` | Lista jugadores (filtros: `country`, `hand`, `search`, `page`, `limit`) |
+| `GET` | `/players/:id` | Detalle de un jugador |
+| `GET` | `/players/:id/matches` | Partidos de un jugador |
+| `GET` | `/players/:id/ranking-history` | Evolución de ranking del jugador |
+
+### Ranking
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/rankings` | Ranking más reciente (`limit` por defecto: 100) |
+| `GET` | `/rankings?date=YYYY-MM-DD` | Ranking en una fecha específica |
+
+### Torneos
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/tournaments` | Lista torneos (filtros: `category`, `surface`, `year`) |
+| `GET` | `/tournaments/:id` | Detalle de un torneo |
+| `GET` | `/tournaments/:id/matches` | Partidos del torneo |
+
+### Partidos
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/matches/:id` | Detalle de un partido |
+| `GET` | `/matches/h2h?player1=:id&player2=:id` | Enfrentamientos directos |
+
+### Ejemplo
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+curl "https://atp-tennis-api.vercel.app/api/v1/rankings?limit=3"
 ```
 
-## Run tests
+```json
+{
+  "data": [
+    { "position": 1, "points": 11250, "player": { "id": "...", "name": "...", "country": "ESP" } },
+    { "position": 2, "points": 9800,  "player": { "id": "...", "name": "...", "country": "ITA" } },
+    { "position": 3, "points": 7600,  "player": { "id": "...", "name": "...", "country": "GER" } }
+  ],
+  "meta": { "date": "2026-10-27", "page": 1, "limit": 3, "total": 500 }
+}
+```
+
+---
+
+## Instalación local
+
+**Requisitos:** Node.js 20+, npm y una instancia de MongoDB (local, Docker o Atlas).
 
 ```bash
-# unit tests
-$ npm run test
+# Clonar el repositorio
+git clone https://github.com/<tu-usuario>/atp-tennis-api.git
+cd atp-tennis-api
 
-# e2e tests
-$ npm run test:e2e
+# Instalar dependencias
+npm install
 
-# test coverage
-$ npm run test:cov
+# Copiar variables de entorno
+cp .env.example .env
+
+# (Opcional) Levantar MongoDB con Docker
+docker run -d --name mongo-tenis -p 27017:27017 mongo:7
+
+# Cargar datos de prueba
+npm run seed
+
+# Iniciar en modo desarrollo
+npm run start:dev
 ```
 
-## Deployment
+La API queda disponible en `http://localhost:3000/api/v1` y Swagger en `http://localhost:3000/docs`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Variables de entorno
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `MONGODB_URI` | Cadena de conexión a MongoDB | `mongodb://localhost:27017/tenis-dev` |
+| `PORT` | Puerto local | `3000` |
+| `CORS_ORIGIN` | Orígenes permitidos (separados por coma) | `http://localhost:5173` |
+| `THROTTLE_LIMIT` | Peticiones permitidas por ventana | `60` |
+| `THROTTLE_TTL` | Ventana de rate limit en ms | `60000` |
+
+---
+
+## Seed de datos
+
+El script `npm run seed` carga jugadores, torneos, partidos y rankings desde archivos JSON/CSV en `data/`.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Contra la BD local (usa .env)
+npm run seed
+
+# Contra producción (una sola vez)
+MONGODB_URI="mongodb+srv://..." npm run seed
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Observability
+## Despliegue
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+### Backend → Vercel
+Vercel detecta NestJS automáticamente (zero-config).
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+1. Importa el repositorio en [vercel.com/new](https://vercel.com/new).
+2. Agrega las variables de entorno en **Settings → Environment Variables** (Production y Preview).
+3. Cada push a `main` despliega a producción; cada PR genera un preview.
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+Para probar localmente igual que en producción:
 
-This project is already instrumented. Create a free account at [observe.nestjs.com](https://observe.nestjs.com), add an application, and paste the generated app key and secret into the `ObserveModule.forRoot()` call in `src/app.module.ts`.
+```bash
+vercel dev
+```
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+### Base de datos → MongoDB Atlas
+1. Crea un cluster **M0 (gratis)** en una región cercana a Vercel (ej. AWS `us-east-1`).
+2. Crea un usuario con permisos `readWrite` solo sobre la base `tenis-prod`.
+3. En **Network Access** permite `0.0.0.0/0` (Vercel usa IPs dinámicas).
+4. Copia la cadena de conexión a `MONGODB_URI` en Vercel.
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## Estructura del proyecto
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```
+src/
+├── common/              # DTOs de paginación, filtros, interceptores, pipes
+├── config/              # Configuración y validación de variables de entorno
+├── players/
+│   ├── dto/
+│   ├── schemas/
+│   ├── players.controller.ts
+│   ├── players.service.ts
+│   └── players.module.ts
+├── rankings/
+├── tournaments/
+├── matches/
+├── app.module.ts
+└── main.ts
+scripts/
+└── seed.ts
+data/                    # Datasets fuente para el seed
+```
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Créditos de datos
 
-## Stay in touch
+Los datos históricos provienen de [tennis_atp](https://github.com/JeffSackmann/tennis_atp) de **Jeff Sackmann / Tennis Abstract**, bajo licencia [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Este proyecto no está afiliado con la ATP. Su uso es solo educativo y no comercial.
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Autor
+
+**Ricardo Osiel Ramírez Flores**
+
+- GitHub: [@RicardoFlores201](https://github.com/RicardoFlores201)
+- LinkedIn: [Ricardo Flores](https://www.linkedin.com/in/ricardo-flores-15197a2b3/)
+
+---
