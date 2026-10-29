@@ -224,6 +224,7 @@ src/
 ├── players/
 │   ├── dto/
 │   ├── schemas/
+│   ├── enums/
 │   ├── players.controller.ts
 │   ├── players.service.ts
 │   └── players.module.ts
