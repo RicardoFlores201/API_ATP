@@ -28,7 +28,7 @@ function safeHost(uri?: string): string {
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const uri = config.get<string>('MONGODB_URI');
+        const uri = config.getOrThrow<string>('MONGODB_URI');
         mongoLogger.log(`Conectando a ${safeHost(uri)}`);
 
         return {
