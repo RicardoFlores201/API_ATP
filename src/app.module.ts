@@ -5,9 +5,12 @@ import { PlayersModule } from './players/players.module.js';
 import { TournamentsModule } from './tournaments/tournaments.module.js';
 import { MatchesModule } from './matches/matches.module.js';
 import { RankingsModule } from './rankings/rankings.module.js';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([{ttl: 60_000, limit: 60}]),
     ConfigModule.forRoot({ isGlobal: true }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
@@ -21,5 +24,6 @@ import { RankingsModule } from './rankings/rankings.module.js';
     MatchesModule,
     RankingsModule,
   ],
+  providers: [{provide: APP_GUARD, useClass: ThrottlerGuard}],
 })
 export class AppModule {}
