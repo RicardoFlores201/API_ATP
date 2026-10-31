@@ -14,6 +14,9 @@ export class Player {
     @Prop({ required: true })
     lastName: string;
 
+    @Prop()
+    age: number;
+
     @Prop({ index: true })
     country: string;
 
